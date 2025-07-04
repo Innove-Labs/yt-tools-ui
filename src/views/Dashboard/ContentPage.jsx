@@ -21,10 +21,11 @@ import {
   AlertCircle,
   FileText,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import { useDataFetcher } from "react-data-fetcher-hook";
 import { API_BASE_URL } from "@/config";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { JOB_CONTEXT_MAP } from "@/constants/job-context-map";
 import { JOB_CONTEXTS } from "@/constants/job-contexts";
 import ContentPageBlogSection from "@/CustomComponents/ContentPageBlogSection";
@@ -33,6 +34,8 @@ const ContentPage = () => {
   const { contentId: id } = useParams();
   const [activeTab, setActiveTab] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const navigate = useNavigate();
 
   const {
     data: content,
@@ -108,6 +111,16 @@ const ContentPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Button
+          variant="ghost"
+          className="mb-4 text-sm text-blue-600 hover:text-blue-800 flex items-center hover:cursor-pointer"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+      </div>
       {/* Content Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">

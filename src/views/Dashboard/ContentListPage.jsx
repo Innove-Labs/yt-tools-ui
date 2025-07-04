@@ -17,9 +17,14 @@ import { useNavigate } from "react-router-dom";
 
 export default function ContentListPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ title: "", link: "" });
   const [open, setOpen] = useState(false);
   const [submissionLoading, setSubmissionLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    link: "",
+    types: [], // array of selected types
+    counts: {}, // { linkedin: 2, reddit: 1, twitter: 3 }
+  });
   const { data, loading, error, refetch } = useDataFetcher({
     baseUrl: API_BASE_URL,
     url: "/api/v1/content/contents-with-jobs",
@@ -28,53 +33,103 @@ export default function ContentListPage() {
       limit: 10,
     },
     credentials: true,
-    autoRefresh: 6000
+    autoRefresh: 6000,
   });
 
-  const formattedData = data?.items?.map((item) => ({
-    id: item.id,
-    title: item.title,
-    link: item.link,
-    created_at: item.created_at,
-    pending_jobs: item.jobs?.reduce(
-      (acc, job) => acc + (job.status === "pending" ? 1 : 0),
-      0
-    ) || 0,
-    failed_jobs: item.jobs?.reduce(
-      (acc, job) => acc + (job.status === "failed" ? 1 : 0),
-      0
-    ) || 0,
-    successful_jobs: item.jobs?.reduce(
-      (acc, job) => acc + (job.status === "completed" ? 1 : 0),
-      0
-    ) || 0,
-  })) || [];
+  const formattedData =
+    data?.items?.map((item) => ({
+      id: item.id,
+      title: item.title,
+      link: item.link,
+      created_at: item.created_at,
+      pending_jobs:
+        item.jobs?.reduce(
+          (acc, job) => acc + (job.status === "pending" ? 1 : 0),
+          0
+        ) || 0,
+      failed_jobs:
+        item.jobs?.reduce(
+          (acc, job) => acc + (job.status === "failed" ? 1 : 0),
+          0
+        ) || 0,
+      successful_jobs:
+        item.jobs?.reduce(
+          (acc, job) => acc + (job.status === "completed" ? 1 : 0),
+          0
+        ) || 0,
+    })) || [];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleTypeChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData((prev) => {
+      const updatedTypes = checked
+        ? [...prev.types, value]
+        : prev.types.filter((type) => type !== value);
+
+      const updatedCounts = { ...prev.counts };
+      if (!checked) delete updatedCounts[value];
+
+      return {
+        ...prev,
+        types: updatedTypes,
+        counts: updatedCounts,
+      };
+    });
+  };
+
+  const handleCountChange = (e) => {
+    const { name, value } = e.target; // name format: "counts.twitter"
+    const key = name.split(".")[1];
+    setFormData((prev) => ({
+      ...prev,
+      counts: {
+        ...prev.counts,
+        [key]: Number(value),
+      },
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Form Data:", formData);
+    const blogPresent = formData.types?.includes("blog");
     const newBlog = {
       title: formData.title,
       link: formData.link,
     };
+    if (blogPresent) {
+      newBlog.blog = true;
+    }
+    if (formData?.counts && Object.keys(formData.counts).length > 0) {
+      Object.keys(formData.counts).forEach((type) => {
+        if (formData.counts[type] > 0) {
+          newBlog[type] = {
+            include: true,
+            count: formData.counts[type],
+          };
+        }
+      });
+    }
     setSubmissionLoading(true);
-    axiosInstance.post("/yt/extraction-request", newBlog)
-    .then((response) => {
-      console.log("Blog created successfully:", response.data);
-      toast.success("Blog created successfully!");
-      refetch();
-    })
-    .catch((error) => {
-      console.error("Error creating blog:", error);
-      toast.error("Failed to create blog. Please try again.");
-    })
-    .finally(() => {
-      setSubmissionLoading(false);
-    });
+    axiosInstance
+      .post("/yt/extraction-request", newBlog)
+      .then((response) => {
+        console.log("Blog created successfully:", response.data);
+        toast.success("Blog created successfully!");
+        refetch();
+      })
+      .catch((error) => {
+        console.error("Error creating blog:", error);
+        toast.error("Failed to create blog. Please try again.");
+      })
+      .finally(() => {
+        setSubmissionLoading(false);
+      });
     setFormData({ title: "", link: "" });
     setOpen(false);
   };
@@ -95,6 +150,7 @@ export default function ContentListPage() {
               <DialogTitle>Create Blog Content</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Title
@@ -107,6 +163,8 @@ export default function ContentListPage() {
                   required
                 />
               </div>
+
+              {/* Link */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Link
@@ -119,6 +177,46 @@ export default function ContentListPage() {
                   required
                 />
               </div>
+
+              {/* Content Types */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Generate Content Types
+                </label>
+
+                {["blog", "linked_in", "reddit", "twitter"].map((type) => (
+                  <div key={type} className="flex items-center gap-4 mb-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="types"
+                        value={type}
+                        checked={formData.types?.includes(type)}
+                        onChange={handleTypeChange}
+                        className="accent-blue-600"
+                      />
+                      <span className="capitalize">{type} Post</span>
+                    </label>
+
+                    {/* Show count input only for non-blog */}
+                    {type !== "blog" && formData.types?.includes(type) && (
+                      <Input
+                        type="number"
+                        min={1}
+                        max={5}
+                        name={`counts.${type}`}
+                        placeholder="Count"
+                        value={formData.counts?.[type] || ""}
+                        onChange={handleCountChange}
+                        className="w-24"
+                        required
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Buttons */}
               <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -127,7 +225,9 @@ export default function ContentListPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" loading={submissionLoading}>Submit</Button>
+                <Button type="submit" loading={submissionLoading}>
+                  Submit
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -139,20 +239,29 @@ export default function ContentListPage() {
         <p className="text-gray-500">No blogs available.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table loading={loading} className="min-w-full bg-white border border-gray-200 rounded shadow">
+          <table
+            loading={loading}
+            className="min-w-full bg-white border border-gray-200 rounded shadow"
+          >
             <thead className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
               <tr>
                 <th className="px-4 py-3 border-b">Title</th>
                 <th className="px-4 py-3 border-b">Link</th>
                 <th className="px-4 py-3 border-b">Created At</th>
                 <th className="px-4 py-3 border-b text-center">Pending Jobs</th>
-                <th className="px-4 py-3 border-b text-center">Successful Jobs</th>
+                <th className="px-4 py-3 border-b text-center">
+                  Successful Jobs
+                </th>
                 <th className="px-4 py-3 border-b text-center">Failed Jobs</th>
               </tr>
             </thead>
             <tbody>
               {formattedData.map((blog) => (
-                <tr key={blog.id} className="border-t hover:bg-gray-50 text-sm cursor-pointer" onClick={() => navigate(`/dashboard/content/${blog.id}`)}>
+                <tr
+                  key={blog.id}
+                  className="border-t hover:bg-gray-50 text-sm cursor-pointer"
+                  onClick={() => navigate(`/dashboard/content/${blog.id}`)}
+                >
                   <td className="px-4 py-2 font-medium">{blog.title}</td>
                   <td className="px-4 py-2">
                     <a
@@ -168,7 +277,9 @@ export default function ContentListPage() {
                     {new Date(blog.created_at).toLocaleString()}
                   </td>
                   <td className="px-4 py-2 text-center">{blog.pending_jobs}</td>
-                  <td className="px-4 py-2 text-center">{blog.successful_jobs}</td>
+                  <td className="px-4 py-2 text-center">
+                    {blog.successful_jobs}
+                  </td>
                   <td className="px-4 py-2 text-center">{blog.failed_jobs}</td>
                 </tr>
               ))}

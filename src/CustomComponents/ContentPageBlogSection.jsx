@@ -14,8 +14,14 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
+import BlogPage from "./BlogViewPage";
+import { useState } from "react";
+import { Drawer } from "antd";
 
 export default function ContentPageBlogSection({ content }) {
+  const [selectedBlog, setSelectedBlog] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -54,6 +60,9 @@ export default function ContentPageBlogSection({ content }) {
 
   return (
     <>
+      <Drawer open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} width={800} size="large">
+        <BlogPage blog={selectedBlog}/>
+      </Drawer>
       {content.jobs?.filter((job) => job.context === "blog").length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
@@ -139,7 +148,8 @@ export default function ContentPageBlogSection({ content }) {
                               key={index}
                               className="border rounded-lg p-4 hover:bg-gray-50 hover:cursor-pointer transition-colors"
                               onClick={() => {
-                                console.log("Blog clicked:", blog, content);
+                                setIsDrawerOpen(true);
+                                setSelectedBlog(blog);
                               }}
                             >
                               <div className="flex items-start justify-between mb-2">
@@ -147,10 +157,24 @@ export default function ContentPageBlogSection({ content }) {
                                   {blog?.data?.title}
                                 </h5>
                                 <div className="">
-                                    <span>
-                                        ==>
-                                    </span>
-                                    </div>
+                                  <span>
+                                    <svg
+                                      width="24"
+                                      height="24"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M9 18L15 12L9 6"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                      />
+                                    </svg>
+                                  </span>
+                                </div>
                               </div>
                               <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                                 {blog.content}

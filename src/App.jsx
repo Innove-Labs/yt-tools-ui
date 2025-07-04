@@ -31,6 +31,7 @@ function App() {
           >
               <Route path="" element={<ContentListPage />} />
               <Route path=":contentId" element={<ContentPage />} />
+              <Route path=":contentType/:typeId" element={<ContentPage />} />
           </Route>
           <Route path="settings" element={<h1>Dashboard Settings</h1>} />
           <Route path="profile" element={<h1>Dashboard Profile</h1>} />
