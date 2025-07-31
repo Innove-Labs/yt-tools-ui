@@ -33,7 +33,7 @@ export default function ContentListPage() {
       limit: 10,
     },
     credentials: true,
-    autoRefresh: 6000,
+    autoRefresh: 10000,
   });
 
   const formattedData =
@@ -121,6 +121,8 @@ export default function ContentListPage() {
       .then((response) => {
         console.log("Blog created successfully:", response.data);
         toast.success("Blog created successfully!");
+        setFormData({ title: "", link: "" });
+        setOpen(false);
         refetch();
       })
       .catch((error) => {
@@ -130,8 +132,6 @@ export default function ContentListPage() {
       .finally(() => {
         setSubmissionLoading(false);
       });
-    setFormData({ title: "", link: "" });
-    setOpen(false);
   };
 
   return (
@@ -225,7 +225,7 @@ export default function ContentListPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" loading={submissionLoading}>
+                <Button type="submit" disabled={submissionLoading} loading={submissionLoading}>
                   Submit
                 </Button>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, act } from "react";
 import {
   Card,
   CardContent,
@@ -29,6 +29,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { JOB_CONTEXT_MAP } from "@/constants/job-context-map";
 import { JOB_CONTEXTS } from "@/constants/job-contexts";
 import ContentPageBlogSection from "@/CustomComponents/ContentPageBlogSection";
+import ContentPageSocialSection from "@/CustomComponents/ContentPageSocialSection";
 
 const ContentPage = () => {
   const { contentId: id } = useParams();
@@ -204,48 +205,30 @@ const ContentPage = () => {
 
       {/* Content Jobs Tabs */}
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-          Content Jobs
-        </h2>
-
-        {content?.jobs?.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Jobs Found
-              </h3>
-              <p className="text-gray-600">
-                No content jobs have been created for this content yet.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-1 lg:grid-cols-4 gap-2 h-auto p-1">
-              {JOB_CONTEXTS.map((ctx) => (
-                <TabsTrigger
-                  key={ctx}
-                  value={ctx}
-                  className="flex items-center justify-between p-3 h-auto data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="text-left">
-                      <div className="font-medium text-sm">
-                        {JOB_CONTEXT_MAP[ctx] || ctx}
-                      </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-1 lg:grid-cols-4 gap-2 h-auto p-1">
+            {JOB_CONTEXTS.map((ctx) => (
+              <TabsTrigger
+                key={ctx}
+                value={ctx}
+                className="flex items-center justify-between p-3 h-auto data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="text-left">
+                    <div className="font-medium text-sm">
+                      {JOB_CONTEXT_MAP[ctx] || ctx}
                     </div>
                   </div>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <br />
+                </div>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <br />
 
-            {activeTab === "blog" && (
-              <ContentPageBlogSection content={content} />
-            )}
-          </Tabs>
-        )}
+          {activeTab === "blog" && <ContentPageBlogSection content={content} />}
+          {activeTab === "twitter_post" && <ContentPageSocialSection content={content} type="twitter_post"/>}
+          {activeTab === "reddit_post" && <ContentPageSocialSection content={content} type="reddit_post"/>}
+        </Tabs>
       </div>
     </div>
   );

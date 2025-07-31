@@ -1,13 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { JOB_CONTEXT_MAP } from "@/constants/job-context-map";
-import { JOB_STATUS_MAP } from "@/constants/job-status-map";
 import {
-  Calendar,
-  ExternalLink,
-  User,
-  Tag,
-  Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -15,12 +8,15 @@ import {
   Loader2,
 } from "lucide-react";
 import BlogPage from "./BlogViewPage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Drawer } from "antd";
+import { axiosInstance } from "@/utils/axios.util";
 
 export default function ContentPageBlogSection({ content }) {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [blogs, setBlogs] = useState([]);
+  const [loadingBlogs, setLoadingBlogs] = useState(true);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -31,6 +27,24 @@ export default function ContentPageBlogSection({ content }) {
       minute: "2-digit",
     });
   };
+
+  useEffect(() => {
+    if (!content || !content.id) return;
+    setLoadingBlogs(true);
+    axiosInstance
+      .get(`/content/blogs/${content.id}`)
+      .then((response) => {
+        if (response.data) {
+          setBlogs(response.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching blogs:", error);
+      })
+      .finally(() => {
+        setLoadingBlogs(false);
+      });
+  }, [content]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -60,146 +74,86 @@ export default function ContentPageBlogSection({ content }) {
 
   return (
     <>
-      <Drawer open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} width={800} size="large">
-        <BlogPage blog={selectedBlog}/>
+      <Drawer
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        width={800}
+        size="large"
+      >
+        <BlogPage blog={selectedBlog} />
       </Drawer>
-      {content.jobs?.filter((job) => job.context === "blog").length === 0 && (
+
+      {loadingBlogs && (
         <Card>
           <CardContent className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Loader2 className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-spin" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Blog Jobs Found
+              Loading Blogs
             </h3>
             <p className="text-gray-600">
-              No blog jobs have been created for this content yet.
+              Please wait, we are fetching the blogs.
             </p>
           </CardContent>
         </Card>
       )}
-      {content.jobs?.filter((job) => job.context === "blog").length > 0 && (
-        <>
-          {content?.jobs
-            ?.filter((job) => job.context === "blog")
-            .map((job) => (
-              <>
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center space-x-2">
-                        {getStatusIcon(job.status)}
-                        <span>Job Details</span>
-                      </CardTitle>
-                      <Badge className={`${getStatusColor(job.status)}`}>
-                        {JOB_STATUS_MAP[job.status] || "Unknown Status"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">
-                          Platform
-                        </h4>
-                        <p className="text-gray-900">
-                          {(job.context && JOB_CONTEXT_MAP[job.context]) ||
-                            "Unknown Platform"}
-                        </p>
-                      </div>
-                      {/* <div>
-                                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tokens Used</h4>
-                                      <p className="text-gray-900">{job.token_used || 0}</p>
-                                    </div> */}
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">
-                          Created
-                        </h4>
-                        <p className="text-gray-900">
-                          {formatDate(job.created_at)}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">
-                          Updated
-                        </h4>
-                        <p className="text-gray-900">
-                          {formatDate(job.updated_at)}
-                        </p>
-                      </div>
-                    </div>
 
-                    {job.error && job.status === "failed" && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <h4 className="font-medium text-sm text-red-800 mb-1">
-                          Error
-                        </h4>
-                        <p className="text-red-700 text-sm">{job.error}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardContent>
-                    {content?.blogs &&
-                    content?.blogs?.filter((bl) => bl.job_id === job._id)
-                      ?.length ? (
-                      <div className="space-y-4">
-                        {content?.blogs
-                          ?.filter((bl) => bl.job_id === job._id)
-                          ?.map((blog, index) => (
-                            <div
-                              key={index}
-                              className="border rounded-lg p-4 hover:bg-gray-50 hover:cursor-pointer transition-colors"
-                              onClick={() => {
-                                setIsDrawerOpen(true);
-                                setSelectedBlog(blog);
-                              }}
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <h5 className="font-medium text-gray-900">
-                                  {blog?.data?.title}
-                                </h5>
-                                <div className="">
-                                  <span>
-                                    <svg
-                                      width="24"
-                                      height="24"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        d="M9 18L15 12L9 6"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                      />
-                                    </svg>
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                                {blog.content}
-                              </p>
-                              {blog.word_count && (
-                                <p className="text-xs text-gray-500">
-                                  {blog.word_count} words
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-600 text-sm">
-                          No blog posts generated yet
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            ))}
-        </>
+      {blogs?.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Blogs Found
+            </h3>
+            <p className="text-gray-600">
+              No blogs have been generated for this content yet.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {blogs?.length > 0 && (
+        <div className="space-y-4">
+          {blogs.map((blog) => (
+            <Card
+              key={blog._id}
+              className="hover:cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => {
+                setSelectedBlog(blog);
+                setIsDrawerOpen(true);
+              }}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    {getStatusIcon("completed")}
+                    <span>{blog.data?.title || "N/A"}</span>
+                  </CardTitle>
+                  <Badge className={getStatusColor("completed")}>Active</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-700 mb-1">
+                      Created At
+                    </h4>
+                    <p className="text-gray-900">
+                      {formatDate(blog.created_at)}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-700 mb-1">
+                      Updated At
+                    </h4>
+                    <p className="text-gray-900">
+                      {formatDate(blog.updated_at)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </>
   );
