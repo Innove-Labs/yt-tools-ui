@@ -91,7 +91,7 @@ const BlogPage = ({ blog: blogEntity }) => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                {blogEntity.data.title}
+                {blogEntity.data?.title}
               </h1>
 
               {/* Meta Information */}

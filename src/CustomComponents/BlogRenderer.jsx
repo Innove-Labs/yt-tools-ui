@@ -2,6 +2,7 @@ import React from 'react';
 
 const BlogPostRenderer = ({ blogData: blogPost }) => {
   // Sample blog post data - replace with your actual data
+  console.log("BlogPostRenderer blogPost:", blogPost);
     if (!blogPost || !blogPost.sections) {
         return (
           <div className="flex items-center justify-center min-h-screen">
@@ -41,11 +42,12 @@ const BlogPostRenderer = ({ blogData: blogPost }) => {
         const ListTag = section.ordered ? 'ol' : 'ul';
         return (
           <ListTag key={index} className={`mb-6 ${section.ordered ? 'list-decimal' : 'list-disc'} list-inside space-y-2`}>
-            {section.items.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-700 pl-2">
-                {item}
-              </li>
-            ))}
+            {section.items.map((item, itemIndex) => {
+              if (typeof item === 'string') {
+                return <li key={itemIndex} className="text-gray-700">{item}</li>;
+              }
+              return (renderSection(item, itemIndex));
+            })}
           </ListTag>
         );
 

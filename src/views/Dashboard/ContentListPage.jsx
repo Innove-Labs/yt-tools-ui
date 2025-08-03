@@ -98,12 +98,24 @@ export default function ContentListPage() {
     e.preventDefault();
     console.log("Form Data:", formData);
     const blogPresent = formData.types?.includes("blog");
+    const generateIdeasFromComments = formData.types?.includes("comment_idea_generation");
+    const sentimentAnalysis = formData.types?.includes("comment_sentiment_analysis")
+    const commentAnalysis = formData.types?.includes("comment_analysis");
     const newBlog = {
       title: formData.title,
       link: formData.link,
     };
     if (blogPresent) {
       newBlog.blog = true;
+    }
+    if (generateIdeasFromComments) {
+      newBlog.comment_idea_generation = true;
+    }
+    if (sentimentAnalysis) {
+      newBlog.comment_sentiment_analysis = true;
+    }
+    if (commentAnalysis) {
+      newBlog.comment_analysis = true;
     }
     if (formData?.counts && Object.keys(formData.counts).length > 0) {
       Object.keys(formData.counts).forEach((type) => {
@@ -134,6 +146,25 @@ export default function ContentListPage() {
       });
   };
 
+  const generateLabel = (type) => {
+    switch (type) {
+      case "blog":
+        return "Blog Post";
+      case "twitter":
+        return "Twitter Post";
+      case "reddit":
+        return "Reddit Post";
+      case "comment_idea_generation":
+        return "Comment Idea Generation";
+      case "comment_sentiment_analysis":
+        return "Comment Sentiment Analysis";
+      case "comment_analysis":
+        return "Comment Analysis";
+      default:
+        return type;
+    }
+  }
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
@@ -147,7 +178,7 @@ export default function ContentListPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Blog Content</DialogTitle>
+              <DialogTitle>Create Content</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Title */}
@@ -184,7 +215,7 @@ export default function ContentListPage() {
                   Generate Content Types
                 </label>
 
-                {["blog", "linked_in", "reddit", "twitter"].map((type) => (
+                {["blog", "linked_in", "reddit", "twitter", "comment_analysis"].map((type) => (
                   <div key={type} className="flex items-center gap-4 mb-2">
                     <label className="flex items-center gap-2">
                       <input
@@ -195,11 +226,11 @@ export default function ContentListPage() {
                         onChange={handleTypeChange}
                         className="accent-blue-600"
                       />
-                      <span className="capitalize">{type} Post</span>
+                      <span className="capitalize">{generateLabel(type)}</span>
                     </label>
 
                     {/* Show count input only for non-blog */}
-                    {type !== "blog" && formData.types?.includes(type) && (
+                    {!["comment_analysis", "blog"].includes(type) && formData.types?.includes(type) && (
                       <Input
                         type="number"
                         min={1}
