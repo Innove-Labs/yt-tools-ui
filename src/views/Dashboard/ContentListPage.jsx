@@ -27,7 +27,7 @@ export default function ContentListPage() {
   });
   const { data, loading, error, refetch } = useDataFetcher({
     baseUrl: API_BASE_URL,
-    url: "/api/v1/content/contents-with-jobs",
+    url: "/content/contents-with-jobs",
     queryParams: {
       skip: 0,
       limit: 10,
