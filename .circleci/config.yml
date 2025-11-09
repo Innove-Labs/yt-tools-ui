@@ -21,7 +21,7 @@ jobs:
       - run:
           name: Tag and push Docker image
           command: |
-            docker tag $DOCKERHUB_USERNAME/$IMAGE_NAME:latest $DOCKERHUB_USERNAME/yt-tools-ui:${CIRCLE_SHA1}
+            docker tag $DOCKERHUB_USERNAME/yt-tools-ui:latest $DOCKERHUB_USERNAME/yt-tools-ui:${CIRCLE_SHA1}
             docker push $DOCKERHUB_USERNAME/yt-tools-ui:${CIRCLE_SHA1}
 
 workflows:
