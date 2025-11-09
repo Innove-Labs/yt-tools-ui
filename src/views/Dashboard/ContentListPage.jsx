@@ -98,8 +98,12 @@ export default function ContentListPage() {
     e.preventDefault();
     console.log("Form Data:", formData);
     const blogPresent = formData.types?.includes("blog");
-    const generateIdeasFromComments = formData.types?.includes("comment_idea_generation");
-    const sentimentAnalysis = formData.types?.includes("comment_sentiment_analysis")
+    const generateIdeasFromComments = formData.types?.includes(
+      "comment_idea_generation"
+    );
+    const sentimentAnalysis = formData.types?.includes(
+      "comment_sentiment_analysis"
+    );
     const commentAnalysis = formData.types?.includes("comment_analysis");
     const newBlog = {
       title: formData.title,
@@ -163,10 +167,29 @@ export default function ContentListPage() {
       default:
         return type;
     }
-  }
+  };
 
   return (
     <div className="p-8 space-y-6">
+      {submissionLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm">
+            {/* Spinner */}
+            <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+
+            {/* Message */}
+            <h2 className="text-lg font-semibold mb-2">
+              Processing your video...
+            </h2>
+            <p className="text-sm text-gray-600">
+              We are extracting content and generating insights. This may take a
+              few minutes.
+              <br />
+              Please don’t close this window.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Content</h1>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -215,7 +238,13 @@ export default function ContentListPage() {
                   Generate Content Types
                 </label>
 
-                {["blog", "linked_in", "reddit", "twitter", "comment_analysis"].map((type) => (
+                {[
+                  "blog",
+                  "linked_in",
+                  "reddit",
+                  "twitter",
+                  "comment_analysis",
+                ].map((type) => (
                   <div key={type} className="flex items-center gap-4 mb-2">
                     <label className="flex items-center gap-2">
                       <input
@@ -230,19 +259,20 @@ export default function ContentListPage() {
                     </label>
 
                     {/* Show count input only for non-blog */}
-                    {!["comment_analysis", "blog"].includes(type) && formData.types?.includes(type) && (
-                      <Input
-                        type="number"
-                        min={1}
-                        max={5}
-                        name={`counts.${type}`}
-                        placeholder="Count"
-                        value={formData.counts?.[type] || ""}
-                        onChange={handleCountChange}
-                        className="w-24"
-                        required
-                      />
-                    )}
+                    {!["comment_analysis", "blog"].includes(type) &&
+                      formData.types?.includes(type) && (
+                        <Input
+                          type="number"
+                          min={1}
+                          max={5}
+                          name={`counts.${type}`}
+                          placeholder="Count"
+                          value={formData.counts?.[type] || ""}
+                          onChange={handleCountChange}
+                          className="w-24"
+                          required
+                        />
+                      )}
                   </div>
                 ))}
               </div>
@@ -256,7 +286,11 @@ export default function ContentListPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submissionLoading} loading={submissionLoading}>
+                <Button
+                  type="submit"
+                  disabled={submissionLoading}
+                  loading={submissionLoading}
+                >
                   Submit
                 </Button>
               </div>
